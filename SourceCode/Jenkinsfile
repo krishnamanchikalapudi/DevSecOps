@@ -1,0 +1,44 @@
+node {
+   
+   projectName = "examples.java";
+   gitUrl = "https://github.com/krishnamanchikalapudi/${projectName}"
+   
+   
+   stageCheck="";
+
+   stage ("Source Code") {
+       stage ("> checkout") {
+           try {
+               git ( [ url: "$gitUrl", 
+                        branch: "develop", 
+                        credentialsId: 'GitHub.com'
+                    ] )
+               sh """ #!/bin/bash
+                ls -lart
+               """
+               stageCheck += "<br/> Source Code > checkout: <font color='green'><b>OK</b></font>"
+           } catch (ex) {
+               stageCheck += "<br/> Source Code > checkout: <font color='red'><b>ERROR</b></font>"
+           }
+       } 
+       stage ("> compile") {
+            try {
+            
+                stageCheck += "<br/> Source Code > compile: <font color='green'><b>OK</b></font>"
+            } catch (ex) {
+                stageCheck += "<br/> Source Code > compile: <font color='red'><b>ERROR</b></font>"
+            }
+       }
+       stage ("> unitTests") {
+            try {
+            
+                stageCheck += "<br/> Source Code > unitTests: <font color='green'><b>OK</b></font>"
+            } catch (ex) {
+                stageCheck += "<br/> Source Code > unitTests: <font color='red'><b>ERROR</b></font>"
+            }
+       }
+   }
+   
+   print "$stageCheck"
+
+}
