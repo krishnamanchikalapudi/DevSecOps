@@ -1,0 +1,69 @@
+node {
+   
+   projectName = "examples.java";
+   gitUrl = "https://github.com/krishnamanchikalapudi/${projectName}"
+   
+   
+   stageCheck="";
+
+   stage ("Source Code") {
+       stage ("> checkout") {
+           try {
+               git ( [ url: "$gitUrl", 
+                        branch: "develop", 
+                        credentialsId: 'GitHub.com'
+                    ] )
+               
+               stageCheck += "<br/> Source Code > checkout: <font color='green'><b>OK</b></font>"
+           } catch (ex) {
+               stageCheck += "<br/> Source Code > checkout: <font color='red'><b>ERROR</b></font>"
+           }
+       } 
+       stage ("> compile") {
+            try {
+                sh """ #!/bin/bash
+                    cd SpringRestBoot
+                    ls -lart
+                    gradle clean build -x test --stacktrace --warning-mode all
+                """
+                stageCheck += "<br/> Source Code > compile: <font color='green'><b>OK</b></font>"
+            } catch (ex) {
+                stageCheck += "<br/> Source Code > compile: <font color='red'><b>ERROR</b></font>"
+            }
+       }
+       stage ("> unitTests") {
+            try {
+                sh """ #!/bin/bash
+                    gradle test
+                """
+                stageCheck += "<br/> Source Code > unitTests: <font color='green'><b>OK</b></font>"
+            } catch (ex) {
+                stageCheck += "<br/> Source Code > unitTests: <font color='red'><b>ERROR</b></font>"
+            }
+       }
+    }
+    stage ("Package") {
+        stage ("> container") {
+            try {
+                sh """ #!/bin/bash
+                    s2i 
+                """
+                stageCheck += "<br/> Package > container: <font color='green'><b>OK</b></font>"
+            } catch (ex) {
+                stageCheck += "<br/> Package > container: <font color='red'><b>ERROR</b></font>"
+            }
+        }
+    }
+    print "$stageCheck"
+
+}
+
+def fnInit() {
+    sh """ #!/bin/bash
+        export JAVA_HOME=/Library/Java/JavaVirtualMachines/amazon-corretto-8.jdk/Contents/Home
+        export GRADLE_HOME=~/TOOLS/gradle-5.0
+        export S2I_HOME=~/TOOLS/source-to-image
+        export PATH=$S2I_HOME:$GRADLE_HOME/bin:$JAVA_HOME:$PATH:
+        echo $PATH
+    """
+}
