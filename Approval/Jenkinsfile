@@ -1,0 +1,42 @@
+node {
+    projectName = "examples.java";
+    gitUrl = "https://github.com/krishnamanchikalapudi/${projectName}"
+
+    approvers = "krishna";
+   
+    stageCheck="";
+    stage ("Source Code") {
+        stage ("> checkout") {
+            try {
+               git ( [ url: "$gitUrl", 
+                        branch: "develop", 
+                        credentialsId: 'GitHub.com'
+                    ] )
+               sh """ #!/bin/bash
+                ls -lart
+               """
+               stageCheck += "<br/> Source Code > checkout: <font color='green'><b>OK</b></font>"
+            } catch (ex) {
+               stageCheck += "<br/> Source Code > checkout: <font color='red'><b>ERROR</b></font>"
+            }
+        } 
+        stage ("> Approve to Compile") {
+            echo "Appovers = $approvers "
+            input id: 'codeCompile', message: 'Request to compile code? ', ok: 'YES, to compile...   ', submitter: "$approvers"
+        }
+        stage ("> compile") {
+            try {
+                sh """ #!/bin/bash
+                    cd SpringRestBoot
+                    gradle clean build -x test 
+                """
+                stageCheck += "<br/> Source Code > compile: <font color='green'><b>OK</b></font>"
+            } catch (ex) {
+                stageCheck += "<br/> Source Code > compile: <font color='red'><b>ERROR</b></font>"
+            }
+        }
+   }
+   
+   print "$stageCheck"
+
+}
