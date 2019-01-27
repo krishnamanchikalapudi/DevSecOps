@@ -1,0 +1,31 @@
+node {
+   
+   projectName = "examples.java";
+   gitUrl = "https://github.com/krishnamanchikalapudi/${projectName}"
+   
+   
+   stageCheck="";
+
+   stage ("Source Code") {
+        try {
+            git ( [ url: "$gitUrl", 
+                branch: "develop", 
+                credentialsId: 'GitHub.com'
+            ] )
+            stageCheck += "<br/> Source Code > checkout: <font color='green'><b>OK</b></font>"
+        } catch (ex) {
+           stageCheck += "<br/> Source Code > checkout: <font color='red'><b>ERROR</b></font>"
+        } 
+    }
+    stage ("> compile") {
+        try {    
+            zip zipFile: "${projectName}.zip", archive: false, dir:'.'
+            stageCheck += "<br/> Source Code > compile: <font color='green'><b>OK</b></font>"
+        } catch (ex) {
+            stageCheck += "<br/> Source Code > compile: <font color='red'><b>ERROR</b></font>"
+        }
+   }
+   
+   print "$stageCheck"
+
+}
