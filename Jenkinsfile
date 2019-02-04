@@ -15,7 +15,17 @@ node {
             stage ("> tag") {
                 try {
                     timeout(time: 5, unit: 'MINUTES') {
-                        // TODO: 
+                        // TODO: Tag the source code
+                        
+                        // git push origin :refs/heads/branchname
+
+
+                    git ( [ url: "$gitUrl", 
+                        branch: "develop", 
+                        : 
+                    ] )
+
+
 
                         stageCheck += "<br/> Source Code > tag: <font color='green'><b>OK</b></font>"
                     }
@@ -89,7 +99,7 @@ node {
                 stage ("> container") {
                     try {
                         timeout(time: 5, unit: 'MINUTES') {
-                            // TODO: generate container
+                            // TODO: generate container via Dockerfile or s2i
                             echo "containerName: ${containerName}"
                            
                             stageCheck += "<br/> Package > contaier: <font color='green'><b>OK</b></font>"
@@ -102,7 +112,7 @@ node {
                 stage ("> envConfig") {
                     try {
                         timeout(time: 5, unit: 'MINUTES') {
-                            // TODO: zip deploy/k8s folder
+                            // TODO: refer example: ZipArchive/Jenkinsfile
                            
                             echo "envConfigName: ${envConfigName}"
                             stageCheck += "<br/> Package > envConfig: <font color='green'><b>OK</b></font>"
@@ -131,7 +141,15 @@ node {
                 stage ("> envConfig") {
                     try {
                         timeout(time: 5, unit: 'MINUTES') {
-                            // TODO: zip deploy/k8s folder
+                            
+withMyCredentials {
+  def gitOutput = shellCommandOutput("""
+    curl -H 'Authorization: token ${env.GITHUB_API_TOKEN}' -data \
+    '{\"ref\": \"refs/tags/${tagName}\", \"sha\": \"${gitSha}\"}' \
+    -L 'https://api.github.com/repos/jlinder/${repo}/git/refs'
+""")
+}
+                            // TODO: upload to artifactory
                             echo "envConfigName: ${envConfigName}"
 
                             stageCheck += "<br/> Package > envConfig: <font color='green'><b>OK</b></font>"
