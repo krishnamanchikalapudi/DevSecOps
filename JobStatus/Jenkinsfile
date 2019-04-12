@@ -1,0 +1,15 @@
+node {
+    jobname = "Pipeline";
+
+    def lastSuccessfulBuildNumber = Jenkins.getInstance().getItem('Pipeline').lastSuccessfulBuild.number
+    echo "last successful build number: ${lastSuccessfulBuildNumber}"
+
+    def job = Jenkins.instance.getItem(jobname)
+    for (build in job.builds) {
+        def statusMsg = build.buildStatusSummary.message
+        def number = build.getNumber()
+        def status = build.getResult()
+        echo "build number: ${number}    -   status: ${status}   - message: ${statusMsg}"
+    }
+
+}
