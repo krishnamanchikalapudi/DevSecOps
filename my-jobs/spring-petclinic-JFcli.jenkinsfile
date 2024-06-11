@@ -79,7 +79,7 @@ node {
         } // parallel
     } // stage: tests
     stage('BuildInfo') {
-        stage('git info') {
+        stage('vcs info') {
             timeout(time: 2, unit: 'MINUTES') {
                 sh """ #!/bin/bash
                     jf rt bag ${projectName} ${env.BUILD_ID}
@@ -103,18 +103,41 @@ node {
     } // stage: BuildInfo
     stage ('scan') {
         stage('build') {
-            timeout(time: 2, unit: 'MINUTES') {
-                sh """ #!/bin/bash
-                    jf scan .
-                """
-            } // timeout
+            sh """ #!/bin/bash
+                jf scan .
+            """
         } // stage: build
         stage('xray') {
-            timeout(time: 2, unit: 'MINUTES') {
-                sh """ #!/bin/bash
-                    jf bs ${projectName} ${env.BUILD_ID}  --rescan --extended-table=true --vuln=true --server-id ${JFROG_NAME} --format=simple-json
-                """
-            } // timeout
+            sh """ #!/bin/bash
+                jf bs ${projectName} ${env.BUILD_ID} --rescan=true --extended-table=true --vuln=true --server-id=${JFROG_NAME} --format=simple-json
+            """
         } // stage: xray
     } // stage: scan
+    stage("Queries") {
+        stage('build') {
+            //  echo $BP_RESP_DATA | jq -r 'buildInfo.env.PACKAGE_CATEGORY'
+            withCredentials([string(credentialsId: 'JFROG_ARTIFACTORY', variable: 'JFROG_ARTIFACTORY_BEARER_TOKEN')]) {
+                sh """ #!/bin/bash
+                    curl -H 'Authorization: Bearer ${JFROG_ARTIFACTORY_BEARER_TOKEN}' ${JF_RT_URL}/artifactory/api/build/${projectName}/${env.BUILD_ID} | jq -r '.buildInfo.properties'
+                """
+            }  // withCredentials
+        } // stage: build
+    } // stage: queries
+    stage("RBv2") {
+        stage("create") {
+            sh """ #!/bin/bash
+
+            """
+        } // stage: create
+        stage("promote:New2Dev") {
+            sh """ #!/bin/bash
+
+            """
+        } // stage: promote New 2 Dev
+        stage ("promote:Dev2QA") {
+            sh """ #!/bin/bash
+
+            """
+        } // stage: promote Dev 2 QA
+    } // stage: RBv2
 } // node

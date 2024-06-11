@@ -46,7 +46,6 @@ node {
                 withCredentials([string(credentialsId: 'JFROG_ARTIFACTORY', variable: 'JFROG_ARTIFACTORY_BEARER_TOKEN')]) {
                     sh """ #!/bin/bash
                         echo $JFROG_ARTIFACTORY_BEARER_TOKEN
-                        
                         curl -H 'Authorization: Bearer ${JFROG_ARTIFACTORY_BEARER_TOKEN}' ${JF_RT_URL}/artifactory/api/system/ping
                     """
                 }  // withCredentials

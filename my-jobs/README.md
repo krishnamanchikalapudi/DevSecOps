@@ -33,8 +33,14 @@ cat $(pwd)/jenkins-data/config.xml | grep useSecurity
     - refer https://wiki.jenkins-ci.org/display/JENKINS/Administering+Jenkins
 
 
-## Jenkins secret credentials
+## Jenkins jobs
+- secret credentials
 ![JFrog CLI](./images/JenkinsSecrets.png)
+- [software](./software.jenkinsfile)
+![software.jenkinsfile](./images/sofware_jenkinsfile.png)
+- [spring-petclinic using JFrog CLI](./spring-petclinic-JFcli.jenkinsfile)
+![spring-petclinic-JFcli.jenkinsfile](./images/spring-petclinic-JFcli_jenkinsfile.png)
+
 
 
 ## GitHub 
