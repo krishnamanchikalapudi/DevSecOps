@@ -1,0 +1,59 @@
+node {
+    JF_RT_URL="https://psazuse.jfrog.io"
+    stage('Code') {
+        stage('clone') {
+            git branch: 'main', url: 'https://github.com/krishnamanchikalapudi/spring-petclinic.git'
+        } // stage: clone
+        stage('compile') {
+            sh """ #!/bin/bash
+                mvn clean install -DskipTests=true
+            """
+        } // stage: compile
+    } // stage: code
+    stage('Tests') {
+        parallel unitTest: {
+            stage ("unitTest") {
+                timeout(time: 10, unit: 'MINUTES') {
+                    sh """ #!/bin/bash
+                        mvn test surefire-report:report
+
+                        echo 'surefire report generated in ${env.JENKINS_URL}job/${env.JOB_NAME}/${env.BUILD_ID}/execution/node/3/ws/target/site/surefire-report.html'
+                    """
+                } // timeout
+            } // stage: unittest
+        }, checkstyle: {
+            stage ("checkStyle") {
+                timeout(time: 2, unit: 'MINUTES') {
+                    sh """ #!/bin/bash
+                        mvn validate
+                    """
+                } // timeout
+            } // stage: validate
+        }, codeCoverage: {
+            stage ("codeCoverage") {
+                timeout(time: 2, unit: 'MINUTES') {
+                    sh """ #!/bin/bash
+                        mvn jacoco:report
+                                    
+                        echo 'Jacoco report generated in ${env.JENKINS_URL}job/${env.JOB_NAME}/${env.BUILD_ID}/execution/node/3/ws/target/site/jacoco/index.html'
+                    """
+                } // timeout
+            } // stage: Jacoo
+        } // parallel
+    } // stage: tests
+    stage('rt.BuildInfo') {
+        stage('ping') {
+            // reference: https://jfrog.com/help/r/jfrog-rest-apis/system-health-ping
+            withCredentials([string(credentialsId: 'JFROG_ARTIFACTORY', variable: 'JFROG_ARTIFACTORY_BEARER_TOKEN')]) {
+                sh """ #!/bin/bash
+                    echo $JFROG_ARTIFACTORY_BEARER_TOKEN
+                    curl -H 'Authorization: Bearer ${JFROG_ARTIFACTORY_BEARER_TOKEN}' ${JF_RT_URL}/artifactory/api/system/ping
+                """
+            }  // withCredentials
+        } // stage: ping
+        stage('uploadArtifacts') {
+            // reference: 
+            
+        }
+    } // stage: BuildInfo
+}

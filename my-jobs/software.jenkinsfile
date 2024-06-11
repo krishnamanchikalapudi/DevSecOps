@@ -40,14 +40,26 @@ node {
             docker -v
         """
     }
-    stage("Secrets") {
-        withCredentials([string(credentialsId: 'JFROG_ARTIFACTORY', variable: 'JFROG_ARTIFACTORY_BEARER_TOKEN')]) {
-            sh """ #!/bin/bash
-                echo $JFROG_ARTIFACTORY_BEARER_TOKEN
-
-                # curl -V -H 'Authorization: Bearer ????' https://psazuse.jfrog.io/artifactory/api/system/ping
-                curl -H 'Authorization: Bearer ${JFROG_ARTIFACTORY_BEARER_TOKEN}' ${JF_RT_URL}/artifactory/api/system/ping
-            """
-        }  // withCredentials
-    } // 
-}
+    stage('Secrets') {
+        parallel secrettsText: {
+            stage("text") {
+                withCredentials([string(credentialsId: 'JFROG_ARTIFACTORY', variable: 'JFROG_ARTIFACTORY_BEARER_TOKEN')]) {
+                    sh """ #!/bin/bash
+                        echo $JFROG_ARTIFACTORY_BEARER_TOKEN
+                        
+                        curl -H 'Authorization: Bearer ${JFROG_ARTIFACTORY_BEARER_TOKEN}' ${JF_RT_URL}/artifactory/api/system/ping
+                    """
+                }  // withCredentials
+            } // stage: text
+        }, secretsUserAndPwd: {
+            stage(".usernamepassword") {
+                withCredentials([usernamePassword(credentialsId: 'JFROG_ARTIFACTORY_CLI', passwordVariable: 'JFROG_RT_PWD', usernameVariable: 'JFROG_RT_USER')]) {
+                    sh """ #!/bin/bash
+                        echo "username: ${JFROG_RT_USER}"
+                        echo "PWD: ${JFROG_RT_PWD}"
+                    """
+                }  // withCredentials
+            } //  stage: usernamepassword
+        } // parallel
+    } // stage: Secrets
+} // node

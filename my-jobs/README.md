@@ -33,10 +33,26 @@ cat $(pwd)/jenkins-data/config.xml | grep useSecurity
     - refer https://wiki.jenkins-ci.org/display/JENKINS/Administering+Jenkins
 
 
-## Jenkins secrets
-### JFrog CLI Bearer token
-![JFrog CLI](./images/JF_CLI_BearerToken.png)
+## Jenkins secret credentials
+![JFrog CLI](./images/JenkinsSecrets.png)
 
 
+## GitHub 
+### Last uncommit
+- 1 is last uncommit
+``````bash
+git reset --hard HEAD~1
+git push origin -f
+``````
+- 4 is last uncommit
+``````bash
+git reset --hard HEAD~4
+git push origin -f
+``````
+
+### Remove last add cache
+``````bash
+git rm -r --cached .
+``````
 
 [![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Fkrishnamanchikalapudi&count_bg=%2379C83D&title_bg=%23555555&icon=github.svg&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://github.com/krishnamanchikalapudi)
