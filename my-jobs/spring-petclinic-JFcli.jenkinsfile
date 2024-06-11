@@ -3,6 +3,7 @@ node {
     JFROG_NAME="psazuse"
     
     projectName="spring-petclinic"
+    JF_CLI_LOG_LEVEL='DEBUG'
     stage('init') {
         stage('jf.ver') {
             sh """ #!/bin/bash
@@ -20,12 +21,13 @@ node {
         } // stage: rt.config
         stage('rt.ping') {
             sh """ #!/bin/bash
-                export JFROG_CLI_LOG_LEVEL='DEBUG'
+                export JFROG_CLI_LOG_LEVEL='${JF_CLI_LOG_LEVEL}'
                 jf rt ping
             """
         } // stage: rt.ping
         stage('config.show') {
             sh """ #!/bin/bash
+                export JFROG_CLI_LOG_LEVEL='${JF_CLI_LOG_LEVEL}'
                 echo "\n"
                 jf config show
             """
@@ -38,14 +40,32 @@ node {
         stage('mvnc') {
             repoPath="krishnam-mvn"
             sh """ #!/bin/bash  
+                export JFROG_CLI_LOG_LEVEL='${JF_CLI_LOG_LEVEL}'
+
                 jf mvnc --server-id-resolve ${JFROG_NAME} --server-id-deploy ${JFROG_NAME} --repo-resolve-releases ${repoPath}-virtual --repo-resolve-snapshots ${repoPath}-virtual --repo-deploy-releases ${repoPath}-local --repo-deploy-snapshots ${repoPath}-dev-local
             """
         } // stage: mvnc
+        stage('audit') {
+            sh """ #!/bin/bash
+                export JFROG_CLI_LOG_LEVEL='${JF_CLI_LOG_LEVEL}'
+
+                jf audit --mvn --extended-table=true --format=simple-json
+            """
+        }
         stage('compile') {
             sh """ #!/bin/bash
+                export JFROG_CLI_LOG_LEVEL='${JF_CLI_LOG_LEVEL}'
+
                 jf rt mvn clean install -DskipTests=true --scan=true --build-name=${projectName} --build-number=${env.BUILD_ID} --detailed-summary=true 
             """
         } // stage: compile
+        stage('scan') {
+            sh """ #!/bin/bash
+                export JFROG_CLI_LOG_LEVEL='${JF_CLI_LOG_LEVEL}'
+
+                jf scan . --extended-table=true --format=simple-json
+            """
+        }
     } // stage: code
     stage('Tests') {
         parallel unitTest: {
@@ -82,6 +102,8 @@ node {
         stage('vcs info') {
             timeout(time: 2, unit: 'MINUTES') {
                 sh """ #!/bin/bash
+                    export JFROG_CLI_LOG_LEVEL='${JF_CLI_LOG_LEVEL}'
+
                     jf rt bag ${projectName} ${env.BUILD_ID}
                 """
             } // timeout
@@ -89,6 +111,8 @@ node {
         stage('env info') {
             timeout(time: 2, unit: 'MINUTES') {
                 sh """ #!/bin/bash
+                    export JFROG_CLI_LOG_LEVEL='${JF_CLI_LOG_LEVEL}'
+
                     jf rt bce ${projectName} ${env.BUILD_ID} 
                 """
             } // timeout
@@ -96,31 +120,21 @@ node {
         stage ('publish') {
             timeout(time: 2, unit: 'MINUTES') {
                 sh """ #!/bin/bash
+                    export JFROG_CLI_LOG_LEVEL='${JF_CLI_LOG_LEVEL}'
+
                     jf rt bp ${projectName} ${env.BUILD_ID} --detailed-summary=true
                 """
             } // timeout
         } // stage: publish
     } // stage: BuildInfo
-    stage ('scan') {
-        stage('build') {
-            sh """ #!/bin/bash
-                jf scan .
-            """
-        } // stage: build
-        stage('xray') {
-            sh """ #!/bin/bash
-                jf bs ${projectName} ${env.BUILD_ID} --rescan=true --extended-table=true --vuln=true --server-id=${JFROG_NAME} --format=simple-json
-            """
-        } // stage: xray
-    } // stage: scan
     stage("Queries") {
         stage('build') {
             //  echo $BP_RESP_DATA | jq -r 'buildInfo.env.PACKAGE_CATEGORY'
-            withCredentials([string(credentialsId: 'JFROG_ARTIFACTORY', variable: 'JFROG_ARTIFACTORY_BEARER_TOKEN')]) {
-                sh """ #!/bin/bash
-                    curl -H 'Authorization: Bearer ${JFROG_ARTIFACTORY_BEARER_TOKEN}' ${JF_RT_URL}/artifactory/api/build/${projectName}/${env.BUILD_ID} | jq -r '.buildInfo.properties'
-                """
-            }  // withCredentials
+            sh """ #!/bin/bash
+                export JFROG_CLI_LOG_LEVEL='${JF_CLI_LOG_LEVEL}'
+
+                jf rt curl /api/build/${projectName}/${env.BUILD_ID} 
+            """
         } // stage: build
     } // stage: queries
     stage("RBv2") {
